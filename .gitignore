@@ -1,0 +1,6 @@
+# Exclude everyhing
+*
+# But include Flex, Bison and .gitignore files
+!*.l
+!*.y
+!.gitignore
