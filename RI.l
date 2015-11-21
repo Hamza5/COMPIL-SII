@@ -1,9 +1,11 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include "RI.tab.h"
 unsigned short line = 1;
 unsigned short column = 1;
 unsigned short errors = 0;
+extern YYSTYPE yylval;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -36,83 +38,77 @@ ERROR [a-zA-Z]+|.
 %%
 {DOCTYPE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return DOCTYPE;
 }
 {HTML_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return HTML_OPEN;
 }
 {HTML_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return HTML_CLOSE;
 }
 {HEAD_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return HEAD_OPEN;
 }
 {HEAD_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return HEAD_CLOSE;
 }
 {BODY_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return BODY_OPEN;
 }
 {BODY_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
+    yylval = yytext;
+    return BODY_CLOSE;
 }
 {TITLE_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {TITLE_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {META} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {DIV_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {DIV_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {TG_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {TG_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {Bloc_par_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {Bloc_par_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {H1_OPEN} {
-    column += yyleng;
-    printf("%s détecté\n", yytext);
+    column += yyleng;    
 }
 {H1_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {P_OPEN} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {P_CLOSE} {
     column += yyleng;
-    printf("%s détecté\n", yytext);
 }
 {COMMENT} {
     column += yyleng;
@@ -139,7 +135,3 @@ ERROR [a-zA-Z]+|.
 }
 %%
 int yywrap(){ return 1; }
-int main(){
-    yylex();
-    return 0;
-}
