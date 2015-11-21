@@ -4,3 +4,4 @@
 !*.l
 !*.y
 !.gitignore
+!Makefile
