@@ -16,8 +16,8 @@ BODY_OPEN "<BODY>"
 BODY_CLOSE "</BODY>"
 TITLE_OPEN "<TITLE>"
 TITLE_CLOSE "</TITLE>"
+MOT_CLE "<MOTS-CLE value='"([a-zA-Z\-]{1,50}\|)*[a-zA-Z\-]{1,50}"'/>"
 COMMENT "<!--".*"-->"
-META "<META auteurs=\"".+"\" domaine=\"".+"\"/>"
 DIV_OPEN "<DIV>"
 DIV_CLOSE "</DIV>"
 TG_OPEN "<TG>"
@@ -29,12 +29,16 @@ H1_CLOSE "</h1>"
 P_OPEN "<p>"
 P_CLOSE "</p>"
 MOT [a-zA-Z0-9]{1,10}
+MOT_SPECIAL [a-zA-Z0-9&@%µ$éèêâîù_ç/#~\-]+
+NOM [A-Z][a-z]+
+    // META "<META auteurs=\""(({NOM} )+{NOM}[ ]?,[ ]?)*({NOM} )+{NOM}"\" domaine=\""({MOT} ){0,2}{MOT}"\"/>"
+META "<META auteurs="["'].+["']" domaine="["'].+["']"/>"
 QUESTION_MARK "?"
 EXCLAMATION_MARK "!"
 DOT "."
 SEMICOLON ";"
 COMMA ","
-ERROR [a-zA-Z]+|.
+ERROR [a-zA-Z0-9]+|.
 %%
 {DOCTYPE} {
     column += yyleng;
@@ -73,42 +77,62 @@ ERROR [a-zA-Z]+|.
 }
 {TITLE_OPEN} {
     column += yyleng;
+    yylval = yytext;
+    return TITLE_OPEN;
 }
 {TITLE_CLOSE} {
     column += yyleng;
+    yylval = yytext;
+    return TITLE_CLOSE;
+}
+{MOT_CLE} {
+    column += yyleng;
+    yylval = yytext;
+    return MOT_CLE;
 }
 {META} {
     column += yyleng;
+    return META;
 }
 {DIV_OPEN} {
     column += yyleng;
+    return DIV_OPEN;
 }
 {DIV_CLOSE} {
     column += yyleng;
+    return DIV_CLOSE;
 }
 {TG_OPEN} {
     column += yyleng;
+    return TG_OPEN;
 }
 {TG_CLOSE} {
     column += yyleng;
+    return TG_CLOSE;
 }
 {Bloc_par_OPEN} {
     column += yyleng;
+    return Bloc_par_OPEN;
 }
 {Bloc_par_CLOSE} {
     column += yyleng;
+    return Bloc_par_CLOSE;
 }
 {H1_OPEN} {
-    column += yyleng;    
+    column += yyleng;
+    return H1_OPEN;
 }
 {H1_CLOSE} {
     column += yyleng;
+    return H1_CLOSE;
 }
 {P_OPEN} {
     column += yyleng;
+    return P_OPEN;
 }
 {P_CLOSE} {
     column += yyleng;
+    return P_CLOSE;
 }
 {COMMENT} {
     column += yyleng;
@@ -122,11 +146,33 @@ ERROR [a-zA-Z]+|.
 }
 {MOT} {
     column += yyleng;
-    printf("Mot détecté : %s\n", yytext);
+    yylval = yytext;
+    return MOT;
 }
-{DOT}|{SEMICOLON}|{COMMA}|{QUESTION_MARK}|{EXCLAMATION_MARK} {
+{MOT_SPECIAL} {
     column += yyleng;
-    printf("Ponctiuation détecté : %s\n", yytext);
+    yylval = yytext;
+    return MOT_SPECIAL;
+}
+{DOT} {
+    column += yyleng;
+    return DOT;
+}
+{SEMICOLON} {
+    column += yyleng;
+    return SEMICOLON;
+}
+{COMMA} {
+    column += yyleng;
+    return COMMA;
+}
+{QUESTION_MARK} {
+    column += yyleng;
+    return QUESTION_MARK;
+}
+{EXCLAMATION_MARK} {
+    column += yyleng;
+    return EXCLAMATION_MARK;
 }
 {ERROR} {
     errors++;
