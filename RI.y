@@ -22,8 +22,9 @@ mots_specials : MOT_SPECIAL { words_count++; } mots_specials | MOT_SPECIAL { wor
 bloc_par : Bloc_par_OPEN h1 paragraphs Bloc_par_CLOSE;
 h1 : H1_OPEN mots_specials H1_CLOSE;
 paragraphs : p paragraphs | p;
-p : MOT_SPECIAL { words_count++; } p | ponctuation p | question p | DOT { if(words_count > 100){ errors++; } words_count = 0; };
-ponctuation : COMMA | SEMICOLON | EXCLAMATION_MARK;
+p : P_OPEN p_content P_CLOSE { if(words_count > 100){ errors++; } words_count = 0; if(!questions_count){ errors++; } questions_count = 0; };
+p_content : MOT_SPECIAL { words_count++; } p_content | ponctuation p_content | question p_content | DOT;
+ponctuation : COMMA | SEMICOLON | EXCLAMATION_MARK | DOT;
 question : wh mots_specials QUESTION_MARK { questions_count++; };
 wh : "Who" | "When" | "Where" | "How many";
 %%
