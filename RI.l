@@ -16,7 +16,7 @@ BODY_OPEN "<BODY>"
 BODY_CLOSE "</BODY>"
 TITLE_OPEN "<TITLE>"
 TITLE_CLOSE "</TITLE>"
-MOT_CLE "<MOTS-CLE value='"([a-zA-Z\-]{1,50}\|)*[a-zA-Z\-]{1,50}"'/>"
+MOT_CLE "<MOTS-CLE value="["']([a-zA-Z\-\ ]{1,50}\|)*[a-zA-Z\-\ ]{1,50}["']"/>"
 COMMENT "<!--".*"-->"
 DIV_OPEN "<DIV>"
 DIV_CLOSE "</DIV>"
@@ -31,8 +31,7 @@ P_CLOSE "</p>"
 MOT [a-zA-Z0-9]{1,10}
 MOT_SPECIAL [a-zA-Z0-9&@%µ$éèêâîù_ç/#~\-]+
 NOM [A-Z][a-z]+
-    // META "<META auteurs=\""(({NOM} )+{NOM}[ ]?,[ ]?)*({NOM} )+{NOM}"\" domaine=\""({MOT} ){0,2}{MOT}"\"/>"
-META "<META auteurs="["'].+["']" domaine="["'].+["']"/>"
+META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']({MOT_SPECIAL}[ ]){0,2}{MOT_SPECIAL}["']"/>"
 QUESTION_MARK "?"
 EXCLAMATION_MARK "!"
 DOT "."
