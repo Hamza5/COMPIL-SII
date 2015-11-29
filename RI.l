@@ -28,8 +28,7 @@ H1_OPEN "<h1>"
 H1_CLOSE "</h1>"
 P_OPEN "<p>"
 P_CLOSE "</p>"
-MOT [a-zA-Z0-9]{1,10}
-MOT_SPECIAL [a-zA-Z0-9&@%µ$éèêâîù_ç/#~\-]+
+MOT_SPECIAL [a-zA-Z0-9\&\@\%µ\$éèêâîù_ç\/\#\~\-]+
 NOM [A-Z][a-z]+
 META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']({MOT_SPECIAL}[ ]){0,2}{MOT_SPECIAL}["']"/>"
 QUESTION_MARK "?"
@@ -143,11 +142,6 @@ ERROR [a-zA-Z0-9]+|.
 " "|\t {
     column++;
 }
-{MOT} {
-    column += yyleng;
-    yylval = yytext;
-    return MOT;
-}
 {MOT_SPECIAL} {
     column += yyleng;
     yylval = yytext;
@@ -175,7 +169,7 @@ ERROR [a-zA-Z0-9]+|.
 }
 {ERROR} {
     errors++;
-    fprintf(stderr, "Erreur lexical : ligne %d, colonne %d : %s\n", line, column, yytext);
+    fprintf(stderr, "Erreur : ligne %d, colonne %d : %s\n", line, column, yytext);
     column += yyleng;
 }
 %%
