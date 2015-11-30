@@ -15,8 +15,8 @@ int wh2 = 0;
 %%
 S : DOCTYPE HTML_OPEN head body HTML_CLOSE;
 head : HEAD_OPEN head_content HEAD_CLOSE;
-head_content : title | title MOT_CLE | MOT_CLE title | title META | META title | title MOT_CLE META | title META MOT_CLE |
-                META title MOT_CLE | MOT_CLE title META | MOT_CLE META title | META MOT_CLE title; 
+head_content : title MOT_CLE META | title META MOT_CLE | MOT_CLE META title | META MOT_CLE title |
+                META title MOT_CLE | MOT_CLE title META; 
 title : TITLE_OPEN title_content DOT TITLE_CLOSE;
 title_content : MOT_SPECIAL { words_count++; } title_content | MOT_SPECIAL { if(words_count > 9){ errors++; fprintf(stderr, "Erreur : Plus de 10 mots dans le titre. ligne %d, colonne %d : %s\n", line, column - yyleng, yylval); } words_count = 0; };
 body : BODY_OPEN body_content BODY_CLOSE;
