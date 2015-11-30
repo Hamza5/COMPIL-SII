@@ -1,11 +1,13 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "RI.tab.h"
 unsigned short line = 1;
 unsigned short column = 1;
 unsigned short errors = 0;
 extern YYSTYPE yylval;
+extern void insert(char * entity);
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -146,6 +148,7 @@ ERROR [a-zA-Z0-9]+|.
 {MOT} {
     column += yyleng;
     yylval = yytext;
+    insert(yylval);
     return MOT;
 }
 {SPECIAL} {

@@ -1,6 +1,9 @@
 %{
 #include <stdio.h>
+#include<stdlib.h>
 #include <string.h>
+#define HASH_TABLE_SIZE 10000
+#define MAX_TEXT_SIZE 50
 extern FILE * yyin;
 extern unsigned short line, column;
 extern unsigned short errors;
@@ -9,6 +12,39 @@ int words_count = 0;
 int questions_count = 0;
 int wh1 = 0;
 int wh2 = 0;
+typedef struct r {
+    char text[MAX_TEXT_SIZE];
+} row;
+row * symbols[HASH_TABLE_SIZE];
+int hash(char * text){
+    int idf = 0;
+    int i;
+    for(i=0; i<strlen(text); i++){
+        idf += text[i] * i;
+    }
+    return idf;
+}
+void insert(char * entity){
+    int r = hash(entity);
+    if(r >= HASH_TABLE_SIZE) fprintf(stderr, "Erreur : la taille de la table de hashage est insuffisante pour insérer l'entitée '%s' !\n",entity);
+    else if(symbols[r]==NULL) {
+        symbols[r] = malloc(sizeof(row));
+        strcpy(symbols[r]->text, entity);
+    }
+}
+int search(char * entity){
+    int r = hash(entity);
+    if(r >= HASH_TABLE_SIZE && !strcmp(entity, symbols[r]->text)) return r;
+    return -1;
+}
+void show(){
+    int i;
+    for(i=0; i<HASH_TABLE_SIZE; i++){
+        if(symbols[i] != NULL) printf("%5d %s\n", i, symbols[i]->text);
+    }
+}
+int yyerror(char * message);
+int yylex();
 %}
 %define api.value.type{char *}
 %token DOCTYPE HTML_OPEN HTML_CLOSE HEAD_OPEN HEAD_CLOSE BODY_OPEN BODY_CLOSE META TITLE_OPEN TITLE_CLOSE MOT_CLE DIV_OPEN DIV_CLOSE TG_OPEN TG_CLOSE DOT SPECIAL H1_OPEN H1_CLOSE P_OPEN P_CLOSE SEMICOLON COMMA QUESTION_MARK EXCLAMATION_MARK Bloc_par_CLOSE Bloc_par_OPEN MOT
@@ -39,12 +75,14 @@ int yyerror(char * message){
 int main(int argc, char * argv[]){
     if(argc > 1){
         int i;
+        for(i=0; i<HASH_TABLE_SIZE; i++) symbols[i] = NULL; // Vider la table
         for(i=1; i<argc; i++){
             printf("\nAnalyse du fichier %s\n", argv[i]);
             yyin = fopen(argv[i],"r");
             yyparse();
             if(!errors){
                 printf("Analyse terminée. Aucune erreur n'est trouvée.\n");
+                show();
             } else {
                 char s = errors > 1 ? 's' : '\0';
                 printf("Analyse échouée. %d erreur%c trouvée%c\n", errors, s, s);
