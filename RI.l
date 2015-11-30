@@ -28,9 +28,10 @@ H1_OPEN "<h1>"
 H1_CLOSE "</h1>"
 P_OPEN "<p>"
 P_CLOSE "</p>"
-MOT_SPECIAL [a-zA-Z0-9\&\@\%µ\$éèêâîù_ç\/\#\~\-]+
+MOT [a-zA-Z0-9]{1,10}
+SPECIAL [\&\@\%µ\$éèêâîù_ç\/\#\~\-]+
 NOM [A-Z][a-z]+
-META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']({MOT_SPECIAL}[ ]){0,2}{MOT_SPECIAL}["']"/>"
+META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']([a-zA-Z0-9\-]+[ ]){0,2}[a-zA-Z0-9\-]+["']"/>"
 QUESTION_MARK "?"
 EXCLAMATION_MARK "!"
 DOT "."
@@ -142,10 +143,15 @@ ERROR [a-zA-Z0-9]+|.
 " "|\t {
     column++;
 }
-{MOT_SPECIAL} {
+{MOT} {
     column += yyleng;
     yylval = yytext;
-    return MOT_SPECIAL;
+    return MOT;
+}
+{SPECIAL} {
+    column += yyleng;
+    yylval = yytext;
+    return SPECIAL;
 }
 {DOT} {
     column += yyleng;
@@ -169,7 +175,7 @@ ERROR [a-zA-Z0-9]+|.
 }
 {ERROR} {
     errors++;
-    fprintf(stderr, "Erreur : ligne %d, colonne %d : %s\n", line, column, yytext);
+    fprintf(stderr, "Erreur : Entitée non reconnue - ligne %d, colonne %d : %s\n", line, column, yytext);
     column += yyleng;
 }
 %%
