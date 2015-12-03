@@ -12,6 +12,7 @@ int words_count = 0;
 int questions_count = 0;
 int wh1 = 0;
 int wh2 = 0;
+extern char title[150];
 typedef struct r {
     char text[MAX_TEXT_SIZE];
 } row;
@@ -54,22 +55,22 @@ head : HEAD_OPEN head_content HEAD_CLOSE;
 head_content : title MOT_CLE META | title META MOT_CLE | MOT_CLE META title | META MOT_CLE title |
                 META title MOT_CLE | MOT_CLE title META; 
 title : TITLE_OPEN title_content DOT TITLE_CLOSE;
-title_content : MOT { words_count++; } title_content | MOT { if(words_count > 9){ errors++; fprintf(stderr, "Erreur : Plus de 10 mots dans le titre du document. ligne %d, colonne %d : %s\n", line, column - yyleng, yylval); } words_count = 0; };
+title_content : MOT { words_count++; } title_content | MOT { if(words_count > 9){ errors++; fprintf(stderr, "Erreur : Plus de 10 mots dans le titre du document. Document %s, ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } words_count = 0; };
 body : BODY_OPEN body_content BODY_CLOSE;
 body_content : div body_content | div;
 div : DIV_OPEN tg bloc_par DIV_CLOSE;
-tg : TG_OPEN mots_specials DOT TG_CLOSE { if(words_count > 10){ errors++; fprintf(stderr, "Erreur : Plus de 10 mots dans le titre global. ligne %d, colonne %d : %s\n", line, column - yyleng, yylval); } words_count = 0; };
+tg : TG_OPEN mots_specials DOT TG_CLOSE { if(words_count > 10){ errors++; fprintf(stderr, "Erreur : Plus de 10 mots dans le titre global. Document %s, ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } words_count = 0; };
 mots_specials : MOT { words_count++; } mots_specials | MOT { words_count++; } | SPECIAL mots_specials | SPECIAL;
 bloc_par : Bloc_par_OPEN h1 paragraphs Bloc_par_CLOSE;
 h1 : H1_OPEN mots_specials H1_CLOSE;
 paragraphs : p paragraphs | p;
-p : P_OPEN p_content P_CLOSE { if(words_count > 100){ errors++; fprintf(stderr, "Erreur : Plus de 100 mots dans le paragraphe. ligne %d, colonne %d : %s\n", line, column - yyleng, yylval); } words_count = 0; if(!questions_count){ errors++; fprintf(stderr, "Erreur : Paragraphe sans Wh questions. ligne %d, colonne %d : %s\n", line, column - yyleng, yylval); } questions_count = 0; };
+p : P_OPEN p_content P_CLOSE { if(words_count > 100){ errors++; fprintf(stderr, "Erreur : Plus de 100 mots dans le paragraphe. Document %s ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } words_count = 0; if(!questions_count){ errors++; fprintf(stderr, "Erreur : Paragraphe sans Wh questions. Document %s ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } questions_count = 0; };
 p_content : MOT { words_count++; if(!strcmp(yylval, "Who") || !strcmp(yylval, "Where") || !strcmp(yylval, "When")){ wh1 = wh2 = 1; } else if(!strcmp(yylval, "How")) wh1 = 1; else if(!strcmp(yylval, "many")) wh2 = 1; } p_content | SPECIAL p_content | ponctuation p_content | DOT;
 ponctuation : COMMA | SEMICOLON | EXCLAMATION_MARK | QUESTION_MARK { if(wh1 && wh2){ questions_count++; wh1 = 0; wh2 = 0;} } | DOT;
 %%
 int yyerror(char * message){
 	errors++;
-	fprintf(stderr, "Erreur : ligne %u colonne %u : %s\n", line, column - yyleng, yylval);
+	fprintf(stderr, "Erreur : Document %s, ligne %u, colonne %u : %s\n", title, line, column - yyleng, yylval);
 	return 1;
 }
 int main(int argc, char * argv[]){
@@ -81,11 +82,11 @@ int main(int argc, char * argv[]){
             yyin = fopen(argv[i],"r");
             yyparse();
             if(!errors){
-                printf("Analyse terminée. Aucune erreur n'est trouvée.\n");
-                show();
+                printf("Analyse terminée. Aucune erreur n'est trouvée dans le document %s\n", title);
+                //show();
             } else {
                 char s = errors > 1 ? 's' : '\0';
-                printf("Analyse échouée. %d erreur%c trouvée%c\n", errors, s, s);
+                printf("Analyse échouée. %d erreur%c trouvée%c dans le document %s\n", errors, s, s, title);
             }
             printf("\n");
         }

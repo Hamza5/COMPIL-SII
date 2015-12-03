@@ -8,6 +8,8 @@ unsigned short column = 1;
 unsigned short errors = 0;
 extern YYSTYPE yylval;
 extern void insert(char * entity);
+char title[150] = "";
+int inTitle = 0;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -79,11 +81,13 @@ ERROR [a-zA-Z0-9]+|.
 {TITLE_OPEN} {
     column += yyleng;
     yylval = yytext;
+    inTitle = 1;
     return TITLE_OPEN;
 }
 {TITLE_CLOSE} {
     column += yyleng;
     yylval = yytext;
+    inTitle = 0;
     return TITLE_CLOSE;
 }
 {MOT_CLE} {
@@ -148,7 +152,7 @@ ERROR [a-zA-Z0-9]+|.
 {MOT} {
     column += yyleng;
     yylval = yytext;
-    insert(yylval);
+    if(inTitle) { strcat(title, yylval); strcat(title, " "); }
     return MOT;
 }
 {SPECIAL} {
@@ -178,7 +182,7 @@ ERROR [a-zA-Z0-9]+|.
 }
 {ERROR} {
     errors++;
-    fprintf(stderr, "Erreur : Entitée non reconnue - ligne %d, colonne %d : %s\n", line, column, yytext);
+    fprintf(stderr, "Erreur : Entitée non reconnue - Document %s, ligne %d, colonne %d : %s\n", title, line, column, yytext);
     column += yyleng;
 }
 %%
