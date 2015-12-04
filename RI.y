@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include<stdlib.h>
 #include <string.h>
-#define HASH_TABLE_SIZE 10000
+#define HASH_DIFF_SIZE 60
+#define HASH_POS_SIZE 10
+#define HASH_TABLE_SIZE HASH_DIFF_SIZE * HASH_POS_SIZE
 #define MAX_TEXT_SIZE 50
 extern FILE * yyin;
 extern unsigned short line, column;
@@ -17,16 +19,16 @@ typedef struct r {
     char text[MAX_TEXT_SIZE];
 } row;
 row * symbols[HASH_TABLE_SIZE];
-int hash(char * text){
+int hash_small(char * text){
     int idf = 0;
     int i;
     for(i=0; i<strlen(text); i++){
-        idf += text[i] * i;
+        idf += text[i]%HASH_DIFF_SIZE * (i%HASH_POS_SIZE+1);
     }
     return idf;
 }
 void insert(char * entity){
-    int r = hash(entity);
+    int r = hash_small(entity);
     if(r >= HASH_TABLE_SIZE) fprintf(stderr, "Erreur : la taille de la table de hashage est insuffisante pour insérer l'entitée '%s' !\n",entity);
     else if(symbols[r]==NULL) {
         symbols[r] = malloc(sizeof(row));
@@ -34,7 +36,7 @@ void insert(char * entity){
     }
 }
 int search(char * entity){
-    int r = hash(entity);
+    int r = hash_small(entity);
     if(r >= HASH_TABLE_SIZE && !strcmp(entity, symbols[r]->text)) return r;
     return -1;
 }
