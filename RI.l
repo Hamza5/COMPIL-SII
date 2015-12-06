@@ -10,6 +10,11 @@ extern YYSTYPE yylval;
 extern void insert(char * entity);
 char title[150] = "";
 int inTitle = 0;
+int inParagraph = 0;
+char question[200] = "";
+int wh1 = 0;
+int wh2 = 0;
+int questions_count = 0;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -82,6 +87,7 @@ ERROR [a-zA-Z0-9]+|.
     column += yyleng;
     yylval = yytext;
     inTitle = 1;
+    title[0] = '\0';
     return TITLE_OPEN;
 }
 {TITLE_CLOSE} {
@@ -133,10 +139,12 @@ ERROR [a-zA-Z0-9]+|.
 }
 {P_OPEN} {
     column += yyleng;
+    inParagraph = 1;
     return P_OPEN;
 }
 {P_CLOSE} {
     column += yyleng;
+    inParagraph = 0;
     return P_CLOSE;
 }
 {COMMENT} {
@@ -153,6 +161,24 @@ ERROR [a-zA-Z0-9]+|.
     column += yyleng;
     yylval = yytext;
     if(inTitle) { strcat(title, yylval); strcat(title, " "); }
+    else if(inParagraph) {
+        if(!strcmp(yylval, "Who") || !strcmp(yylval, "Where") || !strcmp(yylval, "When")){
+            strcat(question, yylval);
+            strcat(question, " ");
+            wh1 = wh2 = 1;
+        } else if(!strcmp(yylval, "How")){
+            strcat(question, yylval);
+            strcat(question, " ");
+            wh1 = 1;
+        } else if (wh1 && !strcmp(yylval, "many")){
+            strcat(question, yylval);
+            strcat(question, " ");
+            wh2 = 1;
+        } else if(wh1 && wh2){
+            strcat(question, yylval);
+            strcat(question, " ");
+        }
+    }
     return MOT;
 }
 {SPECIAL} {
@@ -174,6 +200,14 @@ ERROR [a-zA-Z0-9]+|.
 }
 {QUESTION_MARK} {
     column += yyleng;
+    if(wh1 && wh2){
+        strcat(question, "?");
+        questions_count++;
+        insert(question);
+        question[0] = '\0';
+        wh1 = 0;
+        wh2 = 0;
+    }
     return QUESTION_MARK;
 }
 {EXCLAMATION_MARK} {

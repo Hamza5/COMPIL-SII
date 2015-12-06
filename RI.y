@@ -4,19 +4,18 @@
 #include <string.h>
 #define HASH_DIFF_SIZE 60
 #define HASH_POS_SIZE 10
-#define HASH_TABLE_SIZE HASH_DIFF_SIZE * HASH_POS_SIZE
-#define MAX_TEXT_SIZE 50
+#define HASH_TABLE_SIZE 5000
+#define MAX_TEXT_SIZE 70
 extern FILE * yyin;
 extern unsigned short line, column;
 extern unsigned short errors;
 extern int yyleng;
 int words_count = 0;
-int questions_count = 0;
-int wh1 = 0;
-int wh2 = 0;
 extern char title[150];
+extern int questions_count;
 typedef struct r {
     char text[MAX_TEXT_SIZE];
+    int occurrences;
 } row;
 row * symbols[HASH_TABLE_SIZE];
 int hash_small(char * text){
@@ -25,7 +24,7 @@ int hash_small(char * text){
     for(i=0; i<strlen(text); i++){
         idf += text[i]%HASH_DIFF_SIZE * (i%HASH_POS_SIZE+1);
     }
-    return idf;
+    return idf%HASH_TABLE_SIZE;
 }
 void insert(char * entity){
     int r = hash_small(entity);
@@ -33,6 +32,9 @@ void insert(char * entity){
     else if(symbols[r]==NULL) {
         symbols[r] = malloc(sizeof(row));
         strcpy(symbols[r]->text, entity);
+        symbols[r]->occurrences = 1;
+    } else {
+        symbols[r]->occurrences++;
     }
 }
 int search(char * entity){
@@ -42,8 +44,9 @@ int search(char * entity){
 }
 void show(){
     int i;
+    printf("%-4s %-70s %s\n", "ID", "Question", "Occurrences");
     for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[i] != NULL) printf("%5d %s\n", i, symbols[i]->text);
+        if(symbols[i] != NULL) printf("%4d %-70s %2d\n", i, symbols[i]->text, symbols[i]->occurrences);
     }
 }
 int yyerror(char * message);
@@ -67,8 +70,8 @@ bloc_par : Bloc_par_OPEN h1 paragraphs Bloc_par_CLOSE;
 h1 : H1_OPEN mots_specials H1_CLOSE;
 paragraphs : p paragraphs | p;
 p : P_OPEN p_content P_CLOSE { if(words_count > 100){ errors++; fprintf(stderr, "Erreur : Plus de 100 mots dans le paragraphe. Document %s ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } words_count = 0; if(!questions_count){ errors++; fprintf(stderr, "Erreur : Paragraphe sans Wh questions. Document %s ligne %d, colonne %d : %s\n", title, line, column - yyleng, yylval); } questions_count = 0; };
-p_content : MOT { words_count++; if(!strcmp(yylval, "Who") || !strcmp(yylval, "Where") || !strcmp(yylval, "When")){ wh1 = wh2 = 1; } else if(!strcmp(yylval, "How")) wh1 = 1; else if(!strcmp(yylval, "many")) wh2 = 1; } p_content | SPECIAL p_content | ponctuation p_content | DOT;
-ponctuation : COMMA | SEMICOLON | EXCLAMATION_MARK | QUESTION_MARK { if(wh1 && wh2){ questions_count++; wh1 = 0; wh2 = 0;} } | DOT;
+p_content : MOT { words_count++; } p_content | SPECIAL p_content | ponctuation p_content | DOT;
+ponctuation : COMMA | SEMICOLON | EXCLAMATION_MARK | QUESTION_MARK | DOT;
 %%
 int yyerror(char * message){
 	errors++;
@@ -85,13 +88,13 @@ int main(int argc, char * argv[]){
             yyparse();
             if(!errors){
                 printf("Analyse terminée. Aucune erreur n'est trouvée dans le document %s\n", title);
-                //show();
             } else {
                 char s = errors > 1 ? 's' : '\0';
                 printf("Analyse échouée. %d erreur%c trouvée%c dans le document %s\n", errors, s, s, title);
             }
             printf("\n");
         }
+        show();
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
