@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 #include "RI.tab.h"
 unsigned short line = 1;
 unsigned short column = 1;
 unsigned short errors = 0;
 extern YYSTYPE yylval;
-extern void insert(char * entity);
+extern void insert(char * entity, char * domain);
 char title[150] = "";
 int inTitle = 0;
 int inParagraph = 0;
@@ -15,6 +16,7 @@ char question[200] = "";
 int wh1 = 0;
 int wh2 = 0;
 int questions_count = 0;
+char * domain;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -38,7 +40,7 @@ H1_CLOSE "</h1>"
 P_OPEN "<p>"
 P_CLOSE "</p>"
 MOT [a-zA-Z0-9]{1,10}
-SPECIAL [\&\@\%µ\$éèêâîù_ç\/\#\~\-]+
+SPECIAL [\&\@\#\$]+
 NOM [A-Z][a-z]+
 META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']([a-zA-Z0-9\-]+[ ]){0,2}[a-zA-Z0-9\-]+["']"/>"
 QUESTION_MARK "?"
@@ -102,6 +104,11 @@ ERROR [a-zA-Z0-9]+|.
     return MOT_CLE;
 }
 {META} {
+    regex_t re;
+    regcomp(&re, "domaine=[\"\'](.+)[\"\']", REG_EXTENDED);
+    regmatch_t results[2];
+    regexec(&re, yytext, 2, results, 0);
+    domain = strndup(yytext+results[1].rm_so, (results[1].rm_eo - results[1].rm_so));
     column += yyleng;
     return META;
 }
@@ -203,7 +210,7 @@ ERROR [a-zA-Z0-9]+|.
     if(wh1 && wh2){
         strcat(question, "?");
         questions_count++;
-        insert(question);
+        insert(question, domain);
         question[0] = '\0';
         wh1 = 0;
         wh2 = 0;

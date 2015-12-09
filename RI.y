@@ -13,9 +13,23 @@ extern int yyleng;
 int words_count = 0;
 extern char title[150];
 extern int questions_count;
+extern char  * domain;
+typedef struct d {
+    char name[MAX_TEXT_SIZE];
+    struct d * next;
+} dmn;
+dmn * search_domain(dmn * domains, char * domain){
+    while(domains != NULL){
+        if(!strcmp(domain, domains->name)) return domains;
+        domains = domains->next;
+    }
+    return NULL;
+}
 typedef struct r {
     char text[MAX_TEXT_SIZE];
     int occurrences;
+    dmn * domains;
+    dmn * last_domain;
 } row;
 row * symbols[HASH_TABLE_SIZE];
 int hash_small(char * text){
@@ -26,15 +40,25 @@ int hash_small(char * text){
     }
     return idf%HASH_TABLE_SIZE;
 }
-void insert(char * entity){
+void insert(char * entity, char * domain){
     int r = hash_small(entity);
     if(r >= HASH_TABLE_SIZE) fprintf(stderr, "Erreur : la taille de la table de hashage est insuffisante pour insérer l'entitée '%s' !\n",entity);
     else if(symbols[r]==NULL) {
         symbols[r] = malloc(sizeof(row));
         strcpy(symbols[r]->text, entity);
         symbols[r]->occurrences = 1;
+        symbols[r]->domains = malloc(sizeof(dmn));
+        strcpy(symbols[r]->domains->name, domain);
+        symbols[r]->domains->next = NULL;
+        symbols[r]->last_domain = symbols[r]->domains;
     } else {
         symbols[r]->occurrences++;
+        if(search_domain(symbols[r]->domains, domain) == NULL){
+            symbols[r]->last_domain->next = malloc(sizeof(dmn));
+            symbols[r]->last_domain = symbols[r]->last_domain->next;
+            strcpy(symbols[r]->last_domain->name, domain);
+            symbols[r]->last_domain->next = NULL;
+        }
     }
 }
 int search(char * entity){
@@ -44,9 +68,24 @@ int search(char * entity){
 }
 void show(){
     int i;
-    printf("%-4s %-70s %s\n", "ID", "Question", "Occurrences");
+    for(i=0; i<(4+1+2*MAX_TEXT_SIZE+2+11+1); i++) printf("-");
+    printf("\n%-4s|%-70s|%-70s|%s|\n", "ID", "Question", "Domaines", "Occurrences");
+    int k;
+    for(k=0; k<(4+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+    printf("\n");
     for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[i] != NULL) printf("%4d %-70s %2d\n", i, symbols[i]->text, symbols[i]->occurrences);
+        if(symbols[i] != NULL){
+            char domains_buffer[MAX_TEXT_SIZE] = "";
+            dmn * j;
+            for(j=symbols[i]->domains; j!=NULL; j=j->next){
+                strcat(domains_buffer, j->name);
+                strcat(domains_buffer, ",");
+            }
+            domains_buffer[strlen(domains_buffer)-1] = '.';
+            printf("%04d|%-70s|%-70s|%11d|\n", i, symbols[i]->text, domains_buffer, symbols[i]->occurrences);
+            for(k=0; k<(4+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+            printf("\n");
+        }
     }
 }
 int yyerror(char * message);
