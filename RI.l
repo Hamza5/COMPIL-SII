@@ -15,6 +15,7 @@ int inParagraph = 0;
 char question[200] = "";
 int wh1 = 0;
 int wh2 = 0;
+int how_diff = 0;
 int questions_count = 0;
 char * domain;
 %}
@@ -177,20 +178,30 @@ ERROR [a-zA-Z0-9]+|.
             strcat(question, yylval);
             strcat(question, " ");
             wh1 = 1;
+            how_diff = 0;
         } else if (wh1 && !strcmp(yylval, "many")){
-            strcat(question, yylval);
-            strcat(question, " ");
-            wh2 = 1;
+            if(how_diff == 1){
+                strcat(question, yylval);
+                strcat(question, " ");
+                wh2 = 1;
+            } else {
+                question[0] = '\0';
+            }
         } else if(wh1 && wh2){
             strcat(question, yylval);
             strcat(question, " ");
         }
+        how_diff++;
     }
     return MOT;
 }
 {SPECIAL} {
     column += yyleng;
     yylval = yytext;
+    if(wh1 && wh2){
+        strcat(question, yylval);
+        strcat(question, " ");
+    }
     return SPECIAL;
 }
 {DOT} {
