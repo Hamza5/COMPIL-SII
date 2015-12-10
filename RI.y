@@ -5,7 +5,7 @@
 #define HASH_DIFF_SIZE 60
 #define HASH_POS_SIZE 10
 #define HASH_TABLE_SIZE 5000
-#define MAX_TEXT_SIZE 70
+#define MAX_TEXT_SIZE 60
 extern FILE * yyin;
 extern unsigned short line, column;
 extern unsigned short errors;
@@ -30,6 +30,7 @@ typedef struct r {
     int occurrences;
     dmn * domains;
     dmn * last_domain;
+    char class[9];
 } row;
 row * symbols[HASH_TABLE_SIZE];
 int hash_small(char * text){
@@ -40,7 +41,7 @@ int hash_small(char * text){
     }
     return idf%HASH_TABLE_SIZE;
 }
-void insert(char * entity, char * domain){
+void insert(char * entity, char * domain, char * question_class){
     int r = hash_small(entity);
     if(r >= HASH_TABLE_SIZE) fprintf(stderr, "Erreur : la taille de la table de hashage est insuffisante pour insérer l'entitée '%s' !\n",entity);
     else if(symbols[r]==NULL) {
@@ -51,6 +52,7 @@ void insert(char * entity, char * domain){
         strcpy(symbols[r]->domains->name, domain);
         symbols[r]->domains->next = NULL;
         symbols[r]->last_domain = symbols[r]->domains;
+        strcpy(symbols[r]->class, question_class);
     } else {
         symbols[r]->occurrences++;
         if(search_domain(symbols[r]->domains, domain) == NULL){
@@ -68,10 +70,10 @@ int search(char * entity){
 }
 void show(){
     int i;
-    for(i=0; i<(4+1+2*MAX_TEXT_SIZE+2+11+1); i++) printf("-");
-    printf("\n%-4s|%-70s|%-70s|%s|\n", "ID", "Question", "Domaines", "Occurrences");
+    for(i=0; i<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); i++) printf("-");
+    printf("\n%-4s|%-60s|%-8s|%-60s|%s|\n", "ID", "Question", "Classe", "Domaines", "Occurrences");
     int k;
-    for(k=0; k<(4+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+    for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
     printf("\n");
     for(i=0; i<HASH_TABLE_SIZE; i++){
         if(symbols[i] != NULL){
@@ -82,8 +84,8 @@ void show(){
                 strcat(domains_buffer, ",");
             }
             domains_buffer[strlen(domains_buffer)-1] = '.';
-            printf("%04d|%-70s|%-70s|%11d|\n", i, symbols[i]->text, domains_buffer, symbols[i]->occurrences);
-            for(k=0; k<(4+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+            printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, symbols[i]->text, symbols[i]->class, domains_buffer, symbols[i]->occurrences);
+            for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
             printf("\n");
         }
     }

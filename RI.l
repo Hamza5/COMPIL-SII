@@ -8,7 +8,7 @@ unsigned short line = 1;
 unsigned short column = 1;
 unsigned short errors = 0;
 extern YYSTYPE yylval;
-extern void insert(char * entity, char * domain);
+extern void insert(char * entity, char * domain, char * question_class);
 char title[150] = "";
 int inTitle = 0;
 int inParagraph = 0;
@@ -18,6 +18,7 @@ int wh2 = 0;
 int how_diff = 0;
 int questions_count = 0;
 char * domain;
+char * class;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<HTML>"
@@ -40,7 +41,7 @@ H1_OPEN "<h1>"
 H1_CLOSE "</h1>"
 P_OPEN "<p>"
 P_CLOSE "</p>"
-MOT [a-zA-Z0-9]{1,10}
+MOT [a-zA-Z0-9\']{1,10}
 SPECIAL [\&\@\#\$]+
 NOM [A-Z][a-z]+
 META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']([a-zA-Z0-9\-]+[ ]){0,2}[a-zA-Z0-9\-]+["']"/>"
@@ -174,6 +175,7 @@ ERROR [a-zA-Z0-9]+|.
             strcat(question, yylval);
             strcat(question, " ");
             wh1 = wh2 = 1;
+            class = strdup(yylval);
         } else if(!strcmp(yylval, "How")){
             strcat(question, yylval);
             strcat(question, " ");
@@ -184,6 +186,7 @@ ERROR [a-zA-Z0-9]+|.
                 strcat(question, yylval);
                 strcat(question, " ");
                 wh2 = 1;
+                class = "How many";
             } else {
                 question[0] = '\0';
             }
@@ -221,7 +224,7 @@ ERROR [a-zA-Z0-9]+|.
     if(wh1 && wh2){
         strcat(question, "?");
         questions_count++;
-        insert(question, domain);
+        insert(question, domain, class);
         question[0] = '\0';
         wh1 = 0;
         wh2 = 0;
