@@ -112,6 +112,25 @@ void show(){
         }
     }
 }
+void write(char * filename){
+    FILE * index = fopen(filename,"w");
+    int i;
+    for(i=0; i<HASH_TABLE_SIZE; i++){
+        if(symbols[i] != NULL){
+            row * question;
+            for(question = symbols[i]; question != NULL; question = question->next){
+                char domains_buffer[MAX_TEXT_SIZE] = "";
+                dmn * j;
+                for(j=question->domains; j!=NULL; j=j->next){
+                    strcat(domains_buffer, j->name);
+                    strcat(domains_buffer, ",");
+                }
+                domains_buffer[strlen(domains_buffer)-1] = '.';
+                fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, question->occurrences);
+            }
+        }
+    }
+}
 int yyerror(char * message);
 int yylex();
 %}
@@ -161,6 +180,7 @@ int main(int argc, char * argv[]){
             printf("\n");
         }
         show();
+        write("index.txt");
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
