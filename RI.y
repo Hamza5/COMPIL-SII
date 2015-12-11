@@ -31,6 +31,7 @@ typedef struct r {
     dmn * domains;
     dmn * last_domain;
     char class[9];
+    struct r * next;
 } row;
 row * symbols[HASH_TABLE_SIZE];
 int hash_small(char * text){
@@ -53,13 +54,31 @@ void insert(char * entity, char * domain, char * question_class){
         symbols[r]->domains->next = NULL;
         symbols[r]->last_domain = symbols[r]->domains;
         strcpy(symbols[r]->class, question_class);
+        symbols[r]->next = NULL;
     } else {
-        symbols[r]->occurrences++;
-        if(search_domain(symbols[r]->domains, domain) == NULL){
-            symbols[r]->last_domain->next = malloc(sizeof(dmn));
-            symbols[r]->last_domain = symbols[r]->last_domain->next;
-            strcpy(symbols[r]->last_domain->name, domain);
-            symbols[r]->last_domain->next = NULL;
+        if(strcmp(symbols[r]->text, entity)){
+            symbols[r]->occurrences++;
+            if(search_domain(symbols[r]->domains, domain) == NULL){
+                symbols[r]->last_domain->next = malloc(sizeof(dmn));
+                symbols[r]->last_domain = symbols[r]->last_domain->next;
+                strcpy(symbols[r]->last_domain->name, domain);
+                symbols[r]->last_domain->next = NULL;
+            }
+        } else {
+            row * question = symbols[r];
+            while(question->next != NULL){
+                if(!strcmp(question->text, entity)){
+                    break;
+                }
+                question = question->next;
+            }
+            if(!strcmp(question->text, entity)) question->occurrences++;
+            if(search_domain(question->domains, domain) == NULL){
+                question->last_domain->next = malloc(sizeof(dmn));
+                question->last_domain = question->last_domain->next;
+                strcpy(question->last_domain->name, domain);
+                question->last_domain->next = NULL;
+            }
         }
     }
 }
@@ -77,16 +96,19 @@ void show(){
     printf("\n");
     for(i=0; i<HASH_TABLE_SIZE; i++){
         if(symbols[i] != NULL){
-            char domains_buffer[MAX_TEXT_SIZE] = "";
-            dmn * j;
-            for(j=symbols[i]->domains; j!=NULL; j=j->next){
-                strcat(domains_buffer, j->name);
-                strcat(domains_buffer, ",");
+            row * question;
+            for(question = symbols[i]; question != NULL; question = question->next){
+                char domains_buffer[MAX_TEXT_SIZE] = "";
+                dmn * j;
+                for(j=question->domains; j!=NULL; j=j->next){
+                    strcat(domains_buffer, j->name);
+                    strcat(domains_buffer, ",");
+                }
+                domains_buffer[strlen(domains_buffer)-1] = '.';
+                printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, question->text, question->class, domains_buffer, question->occurrences);
+                for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+                printf("\n");
             }
-            domains_buffer[strlen(domains_buffer)-1] = '.';
-            printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, symbols[i]->text, symbols[i]->class, domains_buffer, symbols[i]->occurrences);
-            for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
-            printf("\n");
         }
     }
 }
