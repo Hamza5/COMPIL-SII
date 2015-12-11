@@ -146,14 +146,17 @@ int main(int argc, char * argv[]){
         int i;
         for(i=0; i<HASH_TABLE_SIZE; i++) symbols[i] = NULL; // Vider la table
         for(i=1; i<argc; i++){
+            line = 1;
+            column = 1;
+            errors = 0;
             printf("\nAnalyse du fichier %s\n", argv[i]);
             yyin = fopen(argv[i],"r");
             yyparse();
             if(!errors){
-                printf("Analyse terminée. Aucune erreur n'est trouvée dans le document %s\n", title);
+                printf("Analyse terminée. Aucune erreur n'est trouvée dans le document '%s'\n", title);
             } else {
                 char s = errors > 1 ? 's' : '\0';
-                printf("Analyse échouée. %d erreur%c trouvée%c dans le document %s\n", errors, s, s, title);
+                printf("Analyse échouée. %d erreur%c trouvée%c dans le document '%s'\n", errors, s, s, title);
             }
             printf("\n");
         }
