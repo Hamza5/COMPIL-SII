@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<HTML>
+    <HEAD>
+        <META auteurs="Paolo Rosso" domaine="Intelligence Artificiel 2"/>
+        <TITLE>Document.</TITLE>
+        <MOTS-CLE value='TAL|Intelligence Artificiel|bio-informatique'/>
+    </HEAD>
+    <BODY>
+        <DIV>
+            <TG>Titre global 2 document.</TG>
+            <Bloc_par>
+                <h1>This 1 is a special title</h1>
+                <p> Paragraph #.
+                    How many @ are in the directory ?
+                    How this many doesn't count ?!
+                    There are $.
+                </p>
+                <p>
+                    P14Z&
+                    Where this code was used ?
+                    What was its role ?
+                    Jump; to the &.
+                </p>
+                <p> Who wrote this title ?
+                    La5t line.
+                </p>
+            </Bloc_par>
+        </DIV>
+        <DIV>
+            <TG>Un 0tre bloc.</TG>
+            <Bloc_par>
+                <h1>Oufff</h1>
+                <p>
+                    Where should I write the other question ?
+                    I wish that is the end ! lets stop here.
+                </p>
+            </Bloc_par>
+        </DIV>
+    </BODY>
+</HTML>

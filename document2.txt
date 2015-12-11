@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<HTML>
+    <HEAD>
+        <META auteur = "John Doe" domaine = "Intelligence Artificiel" />
+        <TITLE>Document 2.</TITLE>
+        <MOTS-CLE value = 'TAL|Intelligence Artificiel|bio-informatique' />
+    </HEAD   >
+    <BODY       >
+        < DIV >
+            <TG>Title of this part.< / TG >
+            <Bloc_par>
+                <h1 >This 1 is a special title< /h1>
+                <p>
+                    P14Z&
+                    Where is the code ?
+                    What was it ?
+                    Jump; to the &.
+                </ p>
+                <p> Who wrote this title ?
+                    La5t line.
+                </p>
+            </Bloc_par>
+        </DIV>
+        <DIV>
+            <TG>Un 0tre bloc.</TG>
+            <Bloc_par>
+                <h1>Oufff</h1>
+                <p>
+                    Where should I write the other question ?
+                    I wish that is the end ! lets stop here.
+                </p>
+                <p> Paragraph #.
+                    How many jumps are there ?
+                    There are $.
+                </p>
+            </Bloc_par>
+        </DIV>
+    </BODY>
+</HTML>

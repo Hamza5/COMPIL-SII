@@ -21,30 +21,30 @@ char * domain;
 char * class;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
-HTML_OPEN "<HTML>"
-HTML_CLOSE "</HTML>"
-HEAD_OPEN "<HEAD>"
-HEAD_CLOSE "</HEAD>"
-BODY_OPEN "<BODY>"
-BODY_CLOSE "</BODY>"
-TITLE_OPEN "<TITLE>"
-TITLE_CLOSE "</TITLE>"
-MOT_CLE "<MOTS-CLE value="["']([a-zA-Z\-\ ]{1,50}\|)*[a-zA-Z\-\ ]{1,50}["']"/>"
+HTML_OPEN "<"[ \t]*"HTML"[ \t]*">"
+HTML_CLOSE "<"[ \t]*"/"[ \t]*"HTML"[ \t]*">"
+HEAD_OPEN "<"[ \t]*"HEAD"[ \t]*">"
+HEAD_CLOSE "<"[ \t]*"/"[ \t]*"HEAD"[ \t]*">"
+BODY_OPEN "<"[ \t]*"BODY"[ \t]*">"
+BODY_CLOSE "<"[ \t]*"/"[ \t]*"BODY"[ \t]*">"
+TITLE_OPEN "<"[ \t]*"TITLE"[ \t]*">"
+TITLE_CLOSE "<"[ \t]*"/TITLE"[ \t]*">"
+MOT_CLE "<"[ \t]*"MOTS-CLE"[ \t]*"value"[ \t]*"="[ \t]*["']([a-zA-Z\-\ ]{1,50}\|)*[a-zA-Z\-\ ]{1,50}["'][ \t]*"/"[ \t]*">"
 COMMENT "<!--".*"-->"
-DIV_OPEN "<DIV>"
-DIV_CLOSE "</DIV>"
-TG_OPEN "<TG>"
-TG_CLOSE "</TG>"
-Bloc_par_OPEN "<Bloc_par>"
-Bloc_par_CLOSE "</Bloc_par>"
-H1_OPEN "<h1>"
-H1_CLOSE "</h1>"
-P_OPEN "<p>"
-P_CLOSE "</p>"
+DIV_OPEN "<"[ \t]*"DIV"[ \t]*">"
+DIV_CLOSE "<"[ \t]*"/"[ \t]*"DIV"[ \t]*">"
+TG_OPEN "<"[ \t]*"TG"[ \t]*">"
+TG_CLOSE "<"[ \t]*"/"[ \t]*"TG"[ \t]*">"
+Bloc_par_OPEN "<"[ \t]*"Bloc_par"[ \t]*">"
+Bloc_par_CLOSE "<"[ \t]*"/"[ \t]*"Bloc_par"[ \t]*">"
+H1_OPEN "<"[ \t]*"h1"[ \t]*">"
+H1_CLOSE "<"[ \t]*"/"[ \t]*"h1"[ \t]*">"
+P_OPEN "<"[ \t]*"p"[ \t]*">"
+P_CLOSE "<"[ \t]*"/"[ \t]*"p"[ \t]*">"
 MOT [a-zA-Z0-9\']{1,10}
 SPECIAL [\&\@\#\$]+
 NOM [A-Z][a-z]+
-META "<META auteurs="["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["']" domaine="["']([a-zA-Z0-9\-]+[ ]){0,2}[a-zA-Z0-9\-]+["']"/>"
+META "<"[ \t]*"META"[ \t]*"auteur"s?[ \t]*"="[ \t]*["'](({NOM}[ ])+{NOM}[ ]?,[ ]?)*({NOM}[ ])+{NOM}["'][ \t]*"domaine"[ \t]*"="[ \t]*["']([a-zA-Z0-9\-]+[ ]){0,2}[a-zA-Z0-9\-]+["'][ \t]*"/"[ \t]*">"
 QUESTION_MARK "?"
 EXCLAMATION_MARK "!"
 DOT "."
@@ -107,7 +107,7 @@ ERROR [a-zA-Z0-9]+|.
 }
 {META} {
     regex_t re;
-    regcomp(&re, "domaine=[\"\'](.+)[\"\']", REG_EXTENDED);
+    regcomp(&re, "domaine[ \t]*=[ \t]*[\"\'](.+)[\"\']", REG_EXTENDED);
     regmatch_t results[2];
     regexec(&re, yytext, 2, results, 0);
     domain = strndup(yytext+results[1].rm_so, (results[1].rm_eo - results[1].rm_so));
