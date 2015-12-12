@@ -84,8 +84,27 @@ void insert(char * entity, char * domain, char * question_class){
 }
 int search(char * entity){
     int r = hash_small(entity);
-    if(r >= HASH_TABLE_SIZE && !strcmp(entity, symbols[r]->text)) return r;
+    if(r >= HASH_TABLE_SIZE){
+        row * question;
+        for(question = symbols[r]; question != NULL; question = question->next)
+            if(!strcmp(entity, question->text)) return r;
+    }
     return -1;
+}
+int empty(){
+    int i;
+    for(i=0; i<HASH_TABLE_SIZE; i++){
+        if(symbols[i] != NULL){
+            row * question;
+            row * p;
+            for(question = symbols[i]; question != NULL; p = question, question = question->next, free(p)){
+                dmn * j;
+                dmn * q;
+                for(j=question->domains; j!=NULL; q = j, j=j->next, free(q));
+            }
+            symbols[i] = NULL;
+        }
+    }
 }
 void show(){
     int i;
@@ -125,11 +144,26 @@ void write(char * filename){
                     strcat(domains_buffer, j->name);
                     strcat(domains_buffer, ",");
                 }
-                domains_buffer[strlen(domains_buffer)-1] = '.';
+                domains_buffer[strlen(domains_buffer)-1] = '\0';
                 fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, question->occurrences);
             }
         }
     }
+    fclose(index);
+}
+void read(char * filename){
+    FILE * index = fopen(filename,"r");
+    char * line = NULL;
+    size_t length = 0;
+    empty();
+    while(getline(&line, &length, index) > 0){
+        char * question = strtok(line, "|");
+        char * class = strtok(NULL, "|");
+        char * domain = strtok(NULL, "|");
+        char * occurrences = strtok(NULL, "|");
+        insert(question, domain, class);
+    }
+    fclose(index);
 }
 int yyerror(char * message);
 int yylex();
@@ -179,8 +213,9 @@ int main(int argc, char * argv[]){
             }
             printf("\n");
         }
-        show();
         write("index.txt");
+        read("index.txt");
+        show();
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
