@@ -181,12 +181,12 @@ void show(int current_document){
                 for(question = symbols[current_document][i]; question != NULL; question = question->next){
                     char domains_buffer[MAX_TEXT_SIZE] = "";
                     dmn * j;
-                    for(j=all_domains(question->text); j!=NULL; j=j->next){
+                    for(j=question->domains; j!=NULL; j=j->next){
                         strcat(domains_buffer, j->name);
                         strcat(domains_buffer, ",");
                     }
                     domains_buffer[strlen(domains_buffer)-1] = '.';
-                    printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, question->text, question->class, domains_buffer, occurrences(question->text));
+                    printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, question->text, question->class, domains_buffer, question->occurrences);
                     for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
                     printf("\n");
                 }
@@ -196,35 +196,38 @@ void show(int current_document){
 }
 void write(char * filename){
     FILE * index = fopen(filename,"w");
-    int i;
-    for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[current_document][i] != NULL){
-            row * question;
-            for(question = symbols[current_document][i]; question != NULL; question = question->next){
-                char domains_buffer[MAX_TEXT_SIZE] = "";
-                dmn * j;
-                for(j=question->domains; j!=NULL; j=j->next){
-                    strcat(domains_buffer, j->name);
-                    strcat(domains_buffer, ",");
+    int j;
+    for(j=0; j<MAX_DOCUMENTS; j++){
+        int i;
+        if(symbols[j] != NULL)
+            for(i=0; i<HASH_TABLE_SIZE; i++){
+                if(symbols[j][i] != NULL){
+                    row * question;
+                    for(question = symbols[j][i]; question != NULL; question = question->next){
+                        char domains_buffer[MAX_TEXT_SIZE] = "";
+                        dmn * j;
+                        for(j=all_domains(question->text); j!=NULL; j=j->next){
+                            strcat(domains_buffer, j->name);
+                            strcat(domains_buffer, ",");
+                        }
+                        domains_buffer[strlen(domains_buffer)-1] = '\0';
+                        fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, occurrences(question->text));
+                    }
                 }
-                domains_buffer[strlen(domains_buffer)-1] = '\0';
-                fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, question->occurrences);
             }
-        }
     }
     fclose(index);
 }
-void read(char * filename){
+void read(char * filename, int document){
     FILE * index = fopen(filename,"r");
     char * line = NULL;
     size_t length = 0;
-    empty(current_document);
+    empty(document);
     while(getline(&line, &length, index) > 0){
         char * question = strtok(line, "|");
         char * class = strtok(NULL, "|");
         char * domain = strtok(NULL, "|");
-        char * occurrences = strtok(NULL, "|");
-        insert(question, domain, class, current_document);
+        insert(question, domain, class, document);
     }
     fclose(index);
 }
@@ -281,8 +284,8 @@ int main(int argc, char * argv[]){
             }
             printf("\n");
         }
-        //write("index.txt");
-        //read("index.txt");
+        write("index.txt");
+        //read("index.txt", current_document);
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
