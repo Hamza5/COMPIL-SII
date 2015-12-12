@@ -4,9 +4,9 @@
 #include <string.h>
 #include <regex.h>
 #include "RI.tab.h"
-unsigned short line = 1;
-unsigned short column = 1;
-unsigned short errors = 0;
+unsigned short line;
+unsigned short column;
+unsigned short errors;
 extern YYSTYPE yylval;
 extern void insert(char * entity, char * domain, char * question_class, int current_document);
 char title[150] = "";
@@ -99,6 +99,7 @@ ERROR [a-zA-Z0-9]+|.
     column += yyleng;
     yylval = yytext;
     inTitle = 0;
+    title[strlen(title)-1] = '.';
     return TITLE_CLOSE;
 }
 {MOT_CLE} {
@@ -238,7 +239,7 @@ ERROR [a-zA-Z0-9]+|.
 }
 {ERROR} {
     errors++;
-    fprintf(stderr, "Erreur : Entitée non reconnue - Document %s, ligne %d, colonne %d : %s\n", title, line, column, yytext);
+    fprintf(stderr, "Erreur : Entitée non reconnue - Document '%s', ligne %d, colonne %d : %s\n", title, line, column, yytext);
     column += yyleng;
 }
 %%
