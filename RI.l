@@ -8,7 +8,7 @@ unsigned short line = 1;
 unsigned short column = 1;
 unsigned short errors = 0;
 extern YYSTYPE yylval;
-extern void insert(char * entity, char * domain, char * question_class);
+extern void insert(char * entity, char * domain, char * question_class, int current_document);
 char title[150] = "";
 int inTitle = 0;
 int inParagraph = 0;
@@ -19,6 +19,7 @@ int how_diff = 0;
 int questions_count = 0;
 char * domain;
 char * class;
+extern int current_document;
 %}
 DOCTYPE "<!DOCTYPE HTML>"
 HTML_OPEN "<"[ \t]*"HTML"[ \t]*">"
@@ -224,7 +225,7 @@ ERROR [a-zA-Z0-9]+|.
     if(wh1 && wh2){
         strcat(question, "?");
         questions_count++;
-        insert(question, domain, class);
+        insert(question, domain, class, current_document);
         question[0] = '\0';
         wh1 = 0;
         wh2 = 0;

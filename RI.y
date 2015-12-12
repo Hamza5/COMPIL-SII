@@ -6,6 +6,7 @@
 #define HASH_POS_SIZE 10
 #define HASH_TABLE_SIZE 5000
 #define MAX_TEXT_SIZE 60
+#define MAX_DOCUMENTS 100
 extern FILE * yyin;
 extern unsigned short line, column;
 extern unsigned short errors;
@@ -14,6 +15,7 @@ int words_count = 0;
 extern char title[150];
 extern int questions_count;
 extern char  * domain;
+int current_document;
 typedef struct d {
     char name[MAX_TEXT_SIZE];
     struct d * next;
@@ -33,7 +35,7 @@ typedef struct r {
     char class[9];
     struct r * next;
 } row;
-row * symbols[HASH_TABLE_SIZE];
+row * symbols[MAX_DOCUMENTS][HASH_TABLE_SIZE];
 int hash_small(char * text){
     int idf = 0;
     int i;
@@ -42,30 +44,97 @@ int hash_small(char * text){
     }
     return idf%HASH_TABLE_SIZE;
 }
-void insert(char * entity, char * domain, char * question_class){
+int search(char * entity, int current_document){
+    printf("search('%s', %d)\n", entity, current_document);
+    int r = hash_small(entity);
+    if(r < HASH_TABLE_SIZE){
+        row * question;
+        for(question = symbols[current_document][r]; question != NULL; question = question->next){
+            if(!strcmp(entity, question->text)){ return r;}
+        }
+    }
+    return -1;
+}
+int occurrences(char * question){
+    int c = 0;
+    int i;
+    for(i=0; i<MAX_DOCUMENTS; i++){
+        if(symbols[i] != NULL){
+            int j;
+            for(j=0; j<HASH_TABLE_SIZE; j++){
+                row * k;
+                for(k=symbols[i][j]; k!=NULL; k=k->next){
+                    if(!strcmp(question, symbols[i][j]->text)) c++;
+                }
+            }
+        }
+    }
+    return c;
+}
+dmn * all_domains(char * question){
+    dmn * domains = NULL;
+    dmn * last_domain = domains;
+    int i;
+    for(i=0; i<MAX_DOCUMENTS; i++){
+        if(symbols[i] != NULL){
+            int j;
+            for(j=0; j<HASH_TABLE_SIZE; j++){
+                row * k;
+                for(k=symbols[i][j]; k!=NULL; k=k->next){
+                    if(!strcmp(question, k->text)){
+                        if(domains == NULL){ // Cas de la tête des domaines
+                            domains = malloc(sizeof(dmn)); // Traitement de la tête des domaines de chque question
+                            strcpy(domains->name, k->domains->name);
+                            domains->next = NULL;
+                            last_domain = domains;
+                            dmn * current_domain;
+                            for(current_domain=k->domains->next; current_domain!=NULL; current_domain=current_domain->next){ // Traitement de tout le reste
+                                last_domain->next = malloc(sizeof(dmn));
+                                last_domain = last_domain->next;
+                                strcpy(last_domain->name, current_domain->name);
+                                last_domain->next = NULL;
+                            }
+                        } else {
+                            dmn * current_domain;
+                            for(current_domain=k->domains; current_domain!=NULL; current_domain=current_domain->next)
+                                if(search_domain(domains, current_domain->name) == NULL){
+                                    last_domain->next = malloc(sizeof(dmn));
+                                    last_domain = last_domain->next;
+                                    strcpy(last_domain->name, current_domain->name);
+                                    last_domain->next = NULL;
+                                }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return domains;
+}
+void insert(char * entity, char * domain, char * question_class, int current_document){
     int r = hash_small(entity);
     if(r >= HASH_TABLE_SIZE) fprintf(stderr, "Erreur : la taille de la table de hashage est insuffisante pour insérer l'entitée '%s' !\n",entity);
-    else if(symbols[r]==NULL) {
-        symbols[r] = malloc(sizeof(row));
-        strcpy(symbols[r]->text, entity);
-        symbols[r]->occurrences = 1;
-        symbols[r]->domains = malloc(sizeof(dmn));
-        strcpy(symbols[r]->domains->name, domain);
-        symbols[r]->domains->next = NULL;
-        symbols[r]->last_domain = symbols[r]->domains;
-        strcpy(symbols[r]->class, question_class);
-        symbols[r]->next = NULL;
+    else if(symbols[current_document][r] == NULL){
+        symbols[current_document][r] = malloc(sizeof(row));
+        strcpy(symbols[current_document][r]->text, entity);
+        symbols[current_document][r]->occurrences = 1;
+        symbols[current_document][r]->domains = malloc(sizeof(dmn));
+        strcpy(symbols[current_document][r]->domains->name, domain);
+        symbols[current_document][r]->domains->next = NULL;
+        symbols[current_document][r]->last_domain = symbols[current_document][r]->domains;
+        strcpy(symbols[current_document][r]->class, question_class);
+        symbols[current_document][r]->next = NULL;
     } else {
-        if(strcmp(symbols[r]->text, entity)){
-            symbols[r]->occurrences++;
-            if(search_domain(symbols[r]->domains, domain) == NULL){
-                symbols[r]->last_domain->next = malloc(sizeof(dmn));
-                symbols[r]->last_domain = symbols[r]->last_domain->next;
-                strcpy(symbols[r]->last_domain->name, domain);
-                symbols[r]->last_domain->next = NULL;
+        if(strcmp(symbols[current_document][r]->text, entity)){
+            symbols[current_document][r]->occurrences++;
+            if(search_domain(symbols[current_document][r]->domains, domain) == NULL){
+                symbols[current_document][r]->last_domain->next = malloc(sizeof(dmn));
+                symbols[current_document][r]->last_domain = symbols[current_document][r]->last_domain->next;
+                strcpy(symbols[current_document][r]->last_domain->name, domain);
+                symbols[current_document][r]->last_domain->next = NULL;
             }
         } else {
-            row * question = symbols[r];
+            row * question = symbols[current_document][r];
             while(question->next != NULL){
                 if(!strcmp(question->text, entity)){
                     break;
@@ -82,51 +151,45 @@ void insert(char * entity, char * domain, char * question_class){
         }
     }
 }
-int search(char * entity){
-    int r = hash_small(entity);
-    if(r >= HASH_TABLE_SIZE){
-        row * question;
-        for(question = symbols[r]; question != NULL; question = question->next)
-            if(!strcmp(entity, question->text)) return r;
-    }
-    return -1;
-}
-int empty(){
+int empty(int document){
     int i;
     for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[i] != NULL){
+        if(symbols[document][i] != NULL){
             row * question;
             row * p;
-            for(question = symbols[i]; question != NULL; p = question, question = question->next, free(p)){
+            for(question = symbols[document][i]; question != NULL; p = question, question = question->next, free(p)){
                 dmn * j;
                 dmn * q;
                 for(j=question->domains; j!=NULL; q = j, j=j->next, free(q));
             }
-            symbols[i] = NULL;
+            symbols[document][i] = NULL;
         }
     }
 }
-void show(){
-    int i;
-    for(i=0; i<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); i++) printf("-");
-    printf("\n%-4s|%-60s|%-8s|%-60s|%s|\n", "ID", "Question", "Classe", "Domaines", "Occurrences");
-    int k;
-    for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
-    printf("\n");
-    for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[i] != NULL){
-            row * question;
-            for(question = symbols[i]; question != NULL; question = question->next){
-                char domains_buffer[MAX_TEXT_SIZE] = "";
-                dmn * j;
-                for(j=question->domains; j!=NULL; j=j->next){
-                    strcat(domains_buffer, j->name);
-                    strcat(domains_buffer, ",");
+void show(int current_document){
+    if(symbols[current_document] != NULL){
+        printf("\n");
+        int i;
+        for(i=0; i<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); i++) printf("-");
+        printf("\n%-4s|%-60s|%-8s|%-60s|%s|\n", "ID", "Question", "Classe", "Domaines", "Occurrences");
+        int k;
+        for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+        printf("\n");
+        for(i=0; i<HASH_TABLE_SIZE; i++){
+            if(symbols[current_document][i] != NULL){
+                row * question;
+                for(question = symbols[current_document][i]; question != NULL; question = question->next){
+                    char domains_buffer[MAX_TEXT_SIZE] = "";
+                    dmn * j;
+                    for(j=all_domains(question->text); j!=NULL; j=j->next){
+                        strcat(domains_buffer, j->name);
+                        strcat(domains_buffer, ",");
+                    }
+                    domains_buffer[strlen(domains_buffer)-1] = '.';
+                    printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, question->text, question->class, domains_buffer, occurrences(question->text));
+                    for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
+                    printf("\n");
                 }
-                domains_buffer[strlen(domains_buffer)-1] = '.';
-                printf("%04d|%-60s|%-8s|%-60s|%11d|\n", i, question->text, question->class, domains_buffer, question->occurrences);
-                for(k=0; k<(4+1+8+1+2*MAX_TEXT_SIZE+2+11+1); k++) printf("-");
-                printf("\n");
             }
         }
     }
@@ -135,9 +198,9 @@ void write(char * filename){
     FILE * index = fopen(filename,"w");
     int i;
     for(i=0; i<HASH_TABLE_SIZE; i++){
-        if(symbols[i] != NULL){
+        if(symbols[current_document][i] != NULL){
             row * question;
-            for(question = symbols[i]; question != NULL; question = question->next){
+            for(question = symbols[current_document][i]; question != NULL; question = question->next){
                 char domains_buffer[MAX_TEXT_SIZE] = "";
                 dmn * j;
                 for(j=question->domains; j!=NULL; j=j->next){
@@ -155,13 +218,13 @@ void read(char * filename){
     FILE * index = fopen(filename,"r");
     char * line = NULL;
     size_t length = 0;
-    empty();
+    empty(current_document);
     while(getline(&line, &length, index) > 0){
         char * question = strtok(line, "|");
         char * class = strtok(NULL, "|");
         char * domain = strtok(NULL, "|");
         char * occurrences = strtok(NULL, "|");
-        insert(question, domain, class);
+        insert(question, domain, class, current_document);
     }
     fclose(index);
 }
@@ -197,25 +260,29 @@ int yyerror(char * message){
 int main(int argc, char * argv[]){
     if(argc > 1){
         int i;
-        for(i=0; i<HASH_TABLE_SIZE; i++) symbols[i] = NULL; // Vider la table
-        for(i=1; i<argc; i++){
+        for(i=0; i<MAX_DOCUMENTS; i++){
+            int j;
+            for(j=0; j<HASH_TABLE_SIZE; j++) symbols[i][j] = NULL; // Vider les tables de symbols
+        }
+        for(current_document=0; current_document<argc-1; current_document++){
             line = 1;
             column = 1;
             errors = 0;
-            printf("\nAnalyse du fichier %s\n", argv[i]);
-            yyin = fopen(argv[i],"r");
+            printf("\nAnalyse du fichier %s\n", argv[current_document+1]);
+            yyin = fopen(argv[current_document+1],"r");
             yyparse();
             if(!errors){
                 printf("Analyse terminée. Aucune erreur n'est trouvée dans le document '%s'\n", title);
+                show(current_document);
             } else {
                 char s = errors > 1 ? 's' : '\0';
                 printf("Analyse échouée. %d erreur%c trouvée%c dans le document '%s'\n", errors, s, s, title);
+                empty(current_document);
             }
             printf("\n");
         }
-        write("index.txt");
-        read("index.txt");
-        show();
+        //write("index.txt");
+        //read("index.txt");
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
