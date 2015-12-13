@@ -2,11 +2,7 @@
 #include <stdio.h>
 #include<stdlib.h>
 #include <string.h>
-#define HASH_DIFF_SIZE 60
-#define HASH_POS_SIZE 10
-#define HASH_TABLE_SIZE 5000
-#define MAX_TEXT_SIZE 60
-#define MAX_DOCUMENTS 100
+#include "Declarations.h"
 extern FILE * yyin;
 extern unsigned short line;
 extern unsigned short column;
@@ -17,10 +13,6 @@ extern char title[150];
 extern int questions_count;
 extern char * domain;
 int current_document;
-typedef struct d {
-    char name[MAX_TEXT_SIZE];
-    struct d * next;
-} dmn;
 dmn * search_domain(dmn * domains, char * domain){
     while(domains != NULL){
         if(!strcmp(domain, domains->name)) return domains;
@@ -28,15 +20,6 @@ dmn * search_domain(dmn * domains, char * domain){
     }
     return NULL;
 }
-typedef struct r {
-    char text[MAX_TEXT_SIZE];
-    int occurrences;
-    dmn * domains;
-    dmn * last_domain;
-    char class[9];
-    struct r * next;
-} row;
-row * symbols[MAX_DOCUMENTS][HASH_TABLE_SIZE];
 int hash_small(char * text){
     int idf = 0;
     int i;

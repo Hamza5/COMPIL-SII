@@ -1,8 +1,10 @@
 # Exclude everyhing
 *
-# But include Flex, Bison, Makefile, .gitignore and testing files
+# Except Flex, Bison, Makefile, .gitignore, C headers and testing text files
 !*.l
 !*.y
 !.gitignore
 !Makefile
+!*.h
+*.tab.h
 !*.txt

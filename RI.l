@@ -4,11 +4,11 @@
 #include <string.h>
 #include <regex.h>
 #include "RI.tab.h"
+#include "Declarations.h"
 unsigned short line;
 unsigned short column;
 unsigned short errors;
 extern YYSTYPE yylval;
-extern void insert(char * entity, char * domain, char * question_class, int current_document);
 char title[150] = "";
 int inTitle = 0;
 int inParagraph = 0;
