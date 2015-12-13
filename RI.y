@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include<stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "Declarations.h"
+
+float temps; // calculer les temps d'execution
+clock_t t1, t2, t3;
+
 extern FILE * yyin;
 extern unsigned short line;
 extern unsigned short column;
@@ -217,7 +222,7 @@ void read(char * filename, int document){
 int yyerror(char * message);
 int yylex();
 %}
-%define api.value.type{char *}
+/* %define api.value.type{char *} */
 %token DOCTYPE HTML_OPEN HTML_CLOSE HEAD_OPEN HEAD_CLOSE BODY_OPEN BODY_CLOSE META TITLE_OPEN TITLE_CLOSE MOT_CLE DIV_OPEN DIV_CLOSE TG_OPEN TG_CLOSE DOT SPECIAL H1_OPEN H1_CLOSE P_OPEN P_CLOSE SEMICOLON COMMA QUESTION_MARK EXCLAMATION_MARK Bloc_par_CLOSE Bloc_par_OPEN MOT
 %%
 S : DOCTYPE HTML_OPEN head body HTML_CLOSE;
@@ -243,6 +248,115 @@ int yyerror(char * message){
 	fprintf(stderr, "Erreur : Document '%s', ligne %u, colonne %u : %s\n", title, line, column - yyleng, yylval);
 	return 1;
 }
+char showQuest[80]="";
+int showQuestion(char * entity,int dernier){
+        t1= clock();
+	int exist=search(entity, 0);
+	if(exist==-1){return exist;}
+	else{	
+ 		if(!strcmp(showQuest,"")){
+		row * question=symbols[0][exist];
+		while(!strcmp(question->text,entity) && (question->next!= NULL)){
+			question= question->next;
+		}
+		char domains_buffer[MAX_TEXT_SIZE] = "";
+		dmn * j;
+		for(j=question->domains; j!=NULL; j=j->next){
+		    strcat(domains_buffer, j->name);
+		    strcat(domains_buffer, ",");
+		}
+                strcat(showQuest,question->text);
+                strcat(showQuest,"| ");
+                strcat(showQuest,question->class);
+                strcat(showQuest,"| ");
+                strcat(showQuest,domains_buffer);
+                strcat(showQuest,"| ");
+                strcat(showQuest,title);
+		}
+		else{
+		strcat(showQuest,", ");
+		strcat(showQuest,title);
+		}
+		if(current_document==dernier+1){
+		printf("%s\n",showQuest);
+		}
+	}
+	t2 = clock();
+	temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+	printf("Le temps de traitement d'une requete %f\n",temps);
+}
+void nbtTotalcorps(){
+int k=MAX_DOCUMENTS -1 ;
+
+int i;
+row * question;
+t1 = clock();
+for(i=0; i<HASH_TABLE_SIZE; i++){
+
+      for(question = symbols[current_document][i]; question != NULL; question = question->next){
+	insert(question->text, " ", " ", k);
+	}
+}
+t2 = clock();
+temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+printf("Le temps d'execution ecoulé lors de la generation de l'index %f\n",temps);
+int nbr=0;
+int nbrunique=0;
+for(i=0; i<(50+19+6); i++) printf("-");
+printf("\n  %-50s | %-19s|","Question","Nombre d'occurrences");
+printf("\n");
+for(i=0; i<(50+19+6); i++) printf("-");
+for( i=0; i<HASH_TABLE_SIZE; i++){
+      for(question = symbols[k][i]; question != NULL; question = question->next){
+	nbr++;
+	printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
+	if(question->occurrences==1){
+	nbrunique++;}
+	}
+}
+printf("\n");
+for(i=0; i<(50+19+6); i++) printf("-");
+
+printf("\n");
+printf("\nnombre questions du corpus : %d\n",nbr);
+printf("nombre questions figurent juste une fois dans le corpus: %d\n",nbrunique);
+}
+void nbrDomaineCorps(){
+int k=MAX_DOCUMENTS -1 ;
+empty(k);
+
+int i;
+row * question;
+for(i=0; i<HASH_TABLE_SIZE; i++){
+
+      for(question = symbols[current_document][i]; question != NULL; question = question->next){
+	dmn * j;
+	for(j=question->domains; j!=NULL; j=j->next){
+	    domain=strtok(j->name,",");
+	     while(domain != NULL){
+		insert(domain , " ", " ", k);
+		domain=strtok(NULL,",");
+	    }
+	
+	}
+      }
+}
+int nbr=0;
+int nbrunique=0;
+printf("\n");
+for(i=0; i<(50+19+6); i++) printf("-");
+printf("\n  %-50s | %-19s|","Domaine","Nombre d'occurrences");
+printf("\n");
+for(i=0; i<(50+19+6); i++) printf("-");
+for( i=0; i<HASH_TABLE_SIZE; i++){
+      for(question = symbols[k][i]; question != NULL; question = question->next){
+	nbr++;
+	printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
+	}
+}
+printf("\n");
+for(i=0; i<(50+19+6); i++) printf("-");
+}
 int main(int argc, char * argv[]){
     if(argc > 1){
         int i;
@@ -250,6 +364,8 @@ int main(int argc, char * argv[]){
             int j;
             for(j=0; j<HASH_TABLE_SIZE; j++) symbols[i][j] = NULL; // Vider les tables de symbols
         }
+        t3 = clock();
+        int time=0;
         for(current_document=0; current_document<argc-1; current_document++){
             line = 1;
             column = 1;
@@ -268,9 +384,16 @@ int main(int argc, char * argv[]){
                 empty(current_document);
             }
             printf("\n");
+        showQuestion("Who wrote this title ?",argc-1);
         }
+        t2 =clock();
+        temps = (float)(t2-t3)/CLOCKS_PER_SEC;
+	printf("Le temps d'execution ecoulé pour pouvoir analyser tous les documents du corpus %f\n",temps);
+	
         write("index.txt");
-        //read("index.txt", current_document);
+        read("index.txt", current_document);
+	nbtTotalcorps();
+        nbrDomaineCorps();
     }
     else printf("Usage : %s <Chemin_du_fichier_1> [<Chemin_du_fichier_i> ...]\n", argv[0]);
     return 0;
