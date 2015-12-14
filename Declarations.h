@@ -1,5 +1,6 @@
 #ifndef DECLARATIONS
 #define DECLARATIONS
+#define YYSTYPE char *
 #define HASH_DIFF_SIZE 60
 #define HASH_POS_SIZE 10
 #define HASH_TABLE_SIZE 5000

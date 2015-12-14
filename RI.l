@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
-#include "RI.tab.h"
 #include "Declarations.h"
+#include "RI.tab.h"
 unsigned short line;
 unsigned short column;
 unsigned short errors;
