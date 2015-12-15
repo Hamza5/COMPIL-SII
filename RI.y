@@ -183,8 +183,10 @@ void show(int current_document){
     }
 }
 void write(char * filename){
-    FILE * index = fopen(filename,"w");
+    char questions[HASH_TABLE_SIZE][MAX_TEXT_SIZE];
     int j;
+    for(j=0; j<HASH_TABLE_SIZE; j++) strcpy(questions[j], "");
+    FILE * index = fopen(filename,"w");
     for(j=0; j<MAX_DOCUMENTS; j++){
         int i;
         if(symbols[j] != NULL)
@@ -192,14 +194,22 @@ void write(char * filename){
                 if(symbols[j][i] != NULL){
                     row * question;
                     for(question = symbols[j][i]; question != NULL; question = question->next){
-                        char domains_buffer[MAX_TEXT_SIZE] = "";
-                        dmn * j;
-                        for(j=all_domains(question->text); j!=NULL; j=j->next){
-                            strcat(domains_buffer, j->name);
-                            strcat(domains_buffer, ",");
+                        int k;
+                        for(k=0; k<HASH_TABLE_SIZE; k++){
+                            //printf("%s ?= %s\n", questions[k], question->text);
+                            if(!strcmp(questions[k], question->text)) break;
                         }
-                        domains_buffer[strlen(domains_buffer)-1] = '\0';
-                        fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, occurrences(question->text));
+                        if(k==HASH_TABLE_SIZE){
+                            char domains_buffer[MAX_TEXT_SIZE] = "";
+                            dmn * j;
+                            for(j=all_domains(question->text); j!=NULL; j=j->next){
+                                strcat(domains_buffer, j->name);
+                                strcat(domains_buffer, ",");
+                            }
+                            domains_buffer[strlen(domains_buffer)-1] = '\0';
+                            strcpy(questions[i], question->text);
+                            fprintf(index, "%s|%s|%s|%d|\n", question->text, question->class, domains_buffer, occurrences(question->text));
+                        }
                     }
                 }
             }
