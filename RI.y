@@ -225,7 +225,10 @@ void read(char * filename, int document){
         char * question = strtok(line, "|");
         char * class = strtok(NULL, "|");
         char * domain = strtok(NULL, "|");
-        insert(question, domain, class, document);
+        char * occurence =strtok(NULL, "|");
+        int occurences = atoi(occurence);
+        int i=0;
+        for(i=0;i<occurences;i++)insert(question, domain, class, document);
     }
     fclose(index);
 }
@@ -295,76 +298,72 @@ int showQuestion(char * entity,int dernier){
 	printf("Le temps de traitement d'une requete %f\n",temps);
 }
 void nbtTotalcorps(){
-int k=MAX_DOCUMENTS -1 ;
-
-int i;
-row * question;
-t1 = clock();
-for(i=0; i<HASH_TABLE_SIZE; i++){
-
-      for(question = symbols[current_document][i]; question != NULL; question = question->next){
-	insert(question->text, " ", " ", k);
+	int k=MAX_DOCUMENTS -1 ;
+	int i;
+	row * question;
+	t1 = clock();
+	for(i=0; i<HASH_TABLE_SIZE; i++){
+		  for(question = symbols[current_document][i]; question != NULL; question = question->next){
+			int j=0;
+			for(j=0;j<question->occurrences;j++) insert(question->text, " ", " ", k);
+		}
 	}
-}
-t2 = clock();
-temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-printf("Le temps d'execution ecoulé lors de la generation de l'index %f\n",temps);
-int nbr=0;
-int nbrunique=0;
-for(i=0; i<(50+19+6); i++) printf("-");
-printf("\n  %-50s | %-19s|","Question","Nombre d'occurrences");
-printf("\n");
-for(i=0; i<(50+19+6); i++) printf("-");
-for( i=0; i<HASH_TABLE_SIZE; i++){
-      for(question = symbols[k][i]; question != NULL; question = question->next){
-	nbr++;
-	printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
-	if(question->occurrences==1){
-	nbrunique++;}
+	t2 = clock();
+	temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+	printf("Le temps d'execution ecoulé lors de la generation de l'index %f\n",temps);
+	int nbr=0;
+	int nbrunique=0;
+	for(i=0; i<(50+19+6); i++) printf("-");
+	printf("\n  %-50s | %-19s|","Question","Nombre d'occurrences");
+	printf("\n");
+	for(i=0; i<(50+19+6); i++) printf("-");
+	for( i=0; i<HASH_TABLE_SIZE; i++){
+		for(question = symbols[k][i]; question != NULL; question = question->next){
+			nbr++;
+			printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
+			if(question->occurrences==1){
+				nbrunique++;
+			}
+		}
 	}
-}
-printf("\n");
-for(i=0; i<(50+19+6); i++) printf("-");
-
-printf("\n");
-printf("\nnombre questions du corpus : %d\n",nbr);
-printf("nombre questions figurent juste une fois dans le corpus: %d\n",nbrunique);
+	printf("\n");
+	for(i=0; i<(50+19+6); i++) printf("-");
+	printf("\n");
+	printf("\nnombre questions du corpus : %d\n",nbr);
+	printf("nombre questions figurent juste une fois dans le corpus: %d\n",nbrunique);
 }
 void nbrDomaineCorps(){
-int k=MAX_DOCUMENTS -1 ;
-empty(k);
-
-int i;
-row * question;
-for(i=0; i<HASH_TABLE_SIZE; i++){
-
-      for(question = symbols[current_document][i]; question != NULL; question = question->next){
-	dmn * j;
-	for(j=question->domains; j!=NULL; j=j->next){
-	    domain=strtok(j->name,",");
-	     while(domain != NULL){
-		insert(domain , " ", " ", k);
-		domain=strtok(NULL,",");
-	    }
-	
+	int k=MAX_DOCUMENTS -1 ;
+	empty(k);
+	int i;
+	row * question;
+	for(i=0; i<HASH_TABLE_SIZE; i++){
+		for(question = symbols[current_document][i]; question != NULL; question = question->next){
+		dmn * j;
+		for(j=question->domains; j!=NULL; j=j->next){
+			domain=strtok(j->name,",");
+			while(domain != NULL){
+				insert(domain , " ", " ", k);
+				domain=strtok(NULL,",");
+			}
+		}
+		}
 	}
-      }
-}
-int nbr=0;
-int nbrunique=0;
-printf("\n");
-for(i=0; i<(50+19+6); i++) printf("-");
-printf("\n  %-50s | %-19s|","Domaine","Nombre d'occurrences");
-printf("\n");
-for(i=0; i<(50+19+6); i++) printf("-");
-for( i=0; i<HASH_TABLE_SIZE; i++){
-      for(question = symbols[k][i]; question != NULL; question = question->next){
-	nbr++;
-	printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
+	int nbr=0;
+	int nbrunique=0;
+	printf("\n");
+	for(i=0; i<(50+19+6); i++) printf("-");
+	printf("\n  %-50s | %-19s|","Domaine","Nombre d'occurrences");
+	printf("\n");
+	for(i=0; i<(50+19+6); i++) printf("-");
+	for( i=0; i<HASH_TABLE_SIZE; i++){
+		for(question = symbols[k][i]; question != NULL; question = question->next){
+			nbr++;
+			printf("\n'%-50s' | %-19d |",question->text,question->occurrences);
+		}
 	}
-}
-printf("\n");
-for(i=0; i<(50+19+6); i++) printf("-");
+	printf("\n");
+	for(i=0; i<(50+19+6); i++) printf("-");
 }
 int main(int argc, char * argv[]){
     if(argc > 1){
