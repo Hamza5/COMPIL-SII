@@ -372,6 +372,10 @@ int main(int argc, char * argv[]){
             int j;
             for(j=0; j<HASH_TABLE_SIZE; j++) symbols[i][j] = NULL; // Vider les tables de symbols
         }
+        printf("Donner une question : ");
+        char q[MAX_TEXT_SIZE];
+        fgets(q, MAX_TEXT_SIZE, stdin);
+        q[strlen(q)-1] = '\0';
         t3 = clock();
         int time=0;
         for(current_document=0; current_document<argc-1; current_document++){
@@ -392,7 +396,7 @@ int main(int argc, char * argv[]){
                 empty(current_document);
             }
             printf("\n");
-        showQuestion("Who wrote this title ?",argc-1);
+        showQuestion(q,argc-1);
         }
         t2 =clock();
         temps = (float)(t2-t3)/CLOCKS_PER_SEC;
